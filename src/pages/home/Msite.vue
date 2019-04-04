@@ -115,7 +115,7 @@
       </mt-swipe>
     </div>
     <div class="activity">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 375 296">
+      <svg v-if="!activities" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 375 296">
         <defs>
           <linearGradient id="c" x1="50%" x2="50%" y1="95.5%" y2="4.603%">
             <stop offset="0%" stop-color="#FAFAFA" />
@@ -126,8 +126,34 @@
           <path d="M248 153h117v133H248V153zm59 121c14.912 0 27-12.088 27-27s-12.088-27-27-27-27 12.088-27 27 12.088 27 27 27zm-34-106v18h68v-18h-68zm9 23v14h50v-14h-50zM129 153h116v133H129V153zm58 121c14.912 0 27-12.088 27-27s-12.088-27-27-27-27 12.088-27 27 12.088 27 27 27zm-34-106v18h68v-18h-68zm9 23v14h50v-14h-50zM10 153h116v133H10V153zm58 121c14.912 0 27-12.088 27-27s-12.088-27-27-27-27 12.088-27 27 12.088 27 27 27zM34 168v18h68v-18H34zm9 23v14h50v-14H43zM189 10h176v140H189V10zm138 129c14.912 0 27-12.088 27-27s-12.088-27-27-27-27 12.088-27 27 12.088 27 27 27zM202 22v18h68V22h-68zm0 24v14h89V46h-89zm0 20v14h78V66h-78zM10 10h176v140H10V10zm137 129c14.912 0 27-12.088 27-27s-12.088-27-27-27-27 12.088-27 27 12.088 27 27 27zM25 22v18h68V22H25zm0 24v14h89V46H25zm0 20v14h78V66H25z" />
         </g>
       </svg>
+      <div v-else>
+        <section class="banner">
+          <img :src="activities.newUserLink.hash | imagUrl3('imageMogr/format/webp/thumbnail/!710x178r/gravity/Center/crop/710x178/')" alt="">
+        </section>
+        <section class="sales">
+          <div class="sales-left">
+            <h3>{{activities.activityLinks.top[0].title}}</h3>
+            <p>{{activities.activityLinks.top[0].content}}</p>
+            <p><span>118人</span><em>{{activities.activityLinks.top[0].info}}</em></p>
+            <img :src="activities.activityLinks.top[0].imghash | imagUrl3('imageMogr/format/webp/thumbnail/!240x160r/gravity/Center/crop/240x160/')" alt="">
+          </div>
+          <div class="sales-right">
+            <h3>{{activities.activityLinks.top[1].title}}</h3>
+            <p>{{activities.activityLinks.top[1].content}}</p>
+            <p><strong>{{activities.activityLinks.top[1].info}}</strong></p>
+            <img :src="activities.activityLinks.top[1].imghash | imagUrl3('imageMogr/format/webp/thumbnail/!240x160r/gravity/Center/crop/240x160/')" alt="">
+          </div>
+        </section>
+        <section class="special">
+          <div v-for="(item, index) in activities.activityLinks.bottom" :key="index">
+              <h3>{{item.title}}</h3>
+              <span>{{item.content}}</span>
+              <img :src="item.imghash | imagUrl3('imageMogr/format/webp/thumbnail/!232x154r/gravity/Center/crop/232x154/')" alt="">
+            </div>
+        </section>
+      </div>
     </div>
-    <h3>推荐商家</h3>
+    <h3 class="recommend">推荐商家</h3>
     <div class="restaurant">
       <div v-if="restaurants.length == 0">
         <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1080 261">
@@ -224,10 +250,14 @@
     <h3>{{address.msg}}</h3>
     <button type="button" @click="openAddress">手动选择地址</button>
   </section>
-  <elm-tabbar></elm-tabbar>
 
   <!-- 地址组件 -->
   <elm-address ref="address" :address="address"></elm-address>
+
+  <!-- 回到顶部 -->
+  <elm-backtop :showBackTop="showBackTop"></elm-backtop>
+  <!-- tab组件 -->
+  <elm-tabbar></elm-tabbar>
 </section>
 </template>
 
@@ -237,6 +267,7 @@ import { mapState, mapActions } from 'vuex'
 import { getAddress } from '@/api/location'
 import { getWeather, getFoodEntries, getRestaurants } from '@/api/msite'
 import Tabbar from '@/components/footer/Tabbar'
+import BackTop from '@/components/common/BackTop'
 import Address from './Address'
 import Vue from 'vue'
 import { Swipe, SwipeItem } from 'mint-ui'
@@ -256,8 +287,9 @@ export default {
       restaurants: [], // 推荐商家
       page: 1, // 当前页数
       limit: 20, // 每一页显示的条数
-      hasMore: true // 是否还有数据
-
+      hasMore: true, // 是否还有数据
+      activities: null, // 活动数据
+      showBackTop: false
     }
   },
   computed: {
@@ -268,7 +300,8 @@ export default {
   },
   components: {
     'elm-tabbar': Tabbar,
-    'elm-address': Address
+    'elm-address': Address,
+    'elm-backtop': BackTop
   },
   methods: {
     ...mapActions([
@@ -280,6 +313,10 @@ export default {
     // 实现页面商家跳转
     goShop (id) {
       this.$router.push({path: '/shop', query: {id}})
+    },
+    handleScroll () {
+      let st = document.documentElement.scrollTop || document.body.scrollTop
+      this.showBackTop = st >= 400
     }
   },
   created () {
@@ -304,12 +341,15 @@ export default {
         getFoodEntries().then((res) => {
           console.log('食品', res)
           // 调用lodash的chunk方法将结果转成二位数组
-
           this.foodEntries = _.chunk(res.data, 8)
           console.log(this.foodEntries[0][0].title)
         }).catch((err) => {
           console.log(err)
         })
+      }).then(() => {
+        // 获取活动数据
+        this.activities = require('@/api/activity')
+        console.log(this.activities)
       }).then(() => {
         let offset = (this.page - 1) * this.limit
         getRestaurants(this.latitude, this.longitude, offset, this.limit).then((res) => {
@@ -342,6 +382,10 @@ export default {
       }
     })
   },
+  mounted () {
+    // 注册滚动事件
+    window.addEventListener('scroll', this.handleScroll)
+  },
   filters: {
     imageUrl (str) {
       let url = 'https://fuss10.elemecdn.com' + str
@@ -350,10 +394,13 @@ export default {
     imageUrl2 (str) {
       let url = '//elm.cangdu.org/img/' + str
       return url
+    },
+    imagUrl3 (str, size) {
+      let name = str.slice(0, 1) + '/' + str.slice(1, 3) + '/' + str.slice(3)
+      return `https://fuss10.elemecdn.com/${name}.png?${size}`
     }
   }
 }
-
 </script>
 
 <style lang="less" scoped>
@@ -425,12 +472,10 @@ header {
     background-image: linear-gradient(90deg,#0af,#0085ff);
     width: 100%;
     ul {
-      width: 100%;
       height: 100%;
       overflow-x: auto;
       white-space: nowrap;
       li {
-        // float: left;
         display: inline-block;
         margin-right: .4rem;
         color: #fff;
@@ -439,10 +484,13 @@ header {
 }
 .content {
   padding-bottom: 1.28rem;
+  .recommend {
+    background-color: #fff;
+    margin-top: -.266667rem;
+  }
   h3 {
     margin-top: .266667rem;
     font-weight: 600;
-    background-color: #fff;
     border-top: 1px solid #eee;
     font-size: .426667rem;
     padding: .426667rem .266667rem 0;
@@ -560,6 +608,105 @@ header {
     }
   }
 }
+.activity {
+      background: #fff;
+      .banner {
+        text-align: center;
+        margin-bottom: .08rem;
+        img {
+          width: 9.466667rem;
+          height: 2.373333rem;
+          margin-left: .106667rem;
+          max-width: 100%;
+        }
+      }
+      .sales {
+        margin-bottom: .08rem;
+        display: flex;
+        padding: 0 .266667rem;
+        div {
+          height: 3.733333rem;
+          padding: .32rem 0 0 .4rem;
+          background: linear-gradient(0deg,#f4f4f4 5%,#fafafa 95%);
+          flex: 1;
+          position: relative;
+          &:not(:last-child) {
+            margin-right: .08rem;
+          }
+          h3 {
+            font-size: .453333rem;
+            font-weight: 700;
+            margin-bottom: .133333rem;
+          }
+          p {
+            font-size: .346667rem;
+            color: #777;
+            margin-bottom: .133333rem;
+            strong {
+              font-size: .32rem;
+              font-weight: 700;
+              color: #af8260;
+            }
+            em {
+              font-size: .32rem;
+              font-weight: 700;
+              color: #333;
+            }
+            span {
+              font-size: .32rem;
+              font-weight: 700;
+              color: #e81919;
+            }
+          }
+          img {
+            width: 3.2rem;
+            height: 2.133333rem;
+            position: absolute;
+            right: 0;
+            bottom: -.2rem;
+          }
+          &.sales-left {
+            h3 {
+              color: #e81919;
+            }
+          }
+        }
+      }
+      .special {
+        display: flex;
+        padding: 0 .266667rem .28rem;
+        div {
+          flex: 1;
+          height: 3.546667rem;
+          text-align: center;
+          position: relative;
+          background: linear-gradient(0deg,#f4f4f4 5%,#fafafa 95%);
+          &:not(:last-child) {
+            margin-right: .08rem;
+          }
+          h3 {
+            font-size: .426667rem;
+            font-weight: 700;
+            color: #333;
+            margin: .426667rem 0 .133333rem;
+          }
+          span {
+            padding: 0 .053333rem;
+            font-size: .293333rem;
+            border: 1px solid #bbb;
+            border-radius: .026667rem;
+          }
+          img {
+            width: 3.093333rem;
+            height: 2.053333rem;
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            max-width: 100%;
+          }
+        }
+      }
+    }
 .nodata {
   margin-top: 4em;
   display: flex;

@@ -57,6 +57,9 @@ export default {
       justify-content: space-around;
       align-items: center;
       box-shadow: 0 -0.266667vw 0.533333vw rgba(0,0,0,.1);
+      li {
+        text-align: center;
+      }
       svg {
         width: .533333rem;
         height: .533333rem;

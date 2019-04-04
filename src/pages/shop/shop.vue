@@ -56,7 +56,7 @@ export default {
     // 调用api获取商家信息
     getRestaurant(id).then((res) => {
       this.seller = res.data
-      console.log('商家', this.seller.float_delivery_fee)
+      console.log('商家', this.seller)
     }).catch((err) => {
       console.log(err)
     })
@@ -75,6 +75,9 @@ export default {
   .shop {
     position: relative;
     nav {
+      position: fixed;
+      width: 100%;
+      top: 3.743rem;
       line-height: 1.066667rem;
       height: 1.066667rem;
       background-color: #fff;

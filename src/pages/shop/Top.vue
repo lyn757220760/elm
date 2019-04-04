@@ -19,7 +19,8 @@
           <p class="delivery">
             <span v-if="seller.delivery_mode">{{seller.delivery_mode.text}}</span>
             <span v-else>商家配送</span> /
-            <em>{{seller.order_lead_time}}分钟速达</em> /
+            <em v-if="seller.order_lead_time">{{seller.order_lead_time}}分钟速达</em>
+            <em else>30分钟速达</em> /
             <strong>{{seller.piecewise_agent_fee.tips}}</strong>
           </p>
           <p class="notice">
@@ -77,7 +78,8 @@ export default {
 <style lang="less" scoped>
   header {
     z-index:50;
-    position: relative;
+    position: fixed;
+    height: 3.743rem;
     padding-bottom: .8rem;
     color: #fff;
     font-size: .293333rem;

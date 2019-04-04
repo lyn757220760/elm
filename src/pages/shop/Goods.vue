@@ -1,5 +1,5 @@
 <template>
-  <div class="">
+  <div>
     <section class="goods">
       <!-- 左侧的导航 -->
       <nav>
